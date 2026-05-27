@@ -1,0 +1,22 @@
+node_modules/
+dist/
+lib/
+*.js.map
+*.d.ts
+!src/**/*.d.ts
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+coverage/
+*.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*

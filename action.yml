@@ -1,0 +1,17 @@
+name: "AI Review Verifier"
+description: "Check code diffs in Pull Requests and automatically comment on potential issues."
+author: "ai-review-verifier"
+
+inputs:
+  github-token:
+    description: "GitHub token for API access"
+    required: true
+    default: ${{ github.token }}
+
+runs:
+  using: "node20"
+  main: "dist/index.js"
+
+branding:
+  icon: "check-circle"
+  color: "blue"
