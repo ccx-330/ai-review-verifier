@@ -1,9 +1,12 @@
 import * as core from "@actions/core";
 import * as github from "@actions/github";
 import { getChangedFiles } from "./diff";
+import { loadConfig } from "./config";
 import { runRules } from "./rules";
 import { formatComment } from "./formatter";
 import { upsertPullRequestComment } from "./comment";
+import { emitAnnotations } from "./annotations";
+import { shouldFail } from "./failure";
 
 async function run(): Promise<void> {
   try {
@@ -32,13 +35,18 @@ async function run(): Promise<void> {
     const token = core.getInput("github-token", { required: true });
     const octokit = github.getOctokit(token);
 
+    const config = loadConfig();
+    core.info(`Config: ${JSON.stringify(config)}`);
+
     core.info(`PR #${pullNumber} — fetching changed files.`);
     const files = await getChangedFiles(octokit, owner, repoName, pullNumber);
 
     core.info(`Found ${files.length} changed file(s).`);
 
-    const results = runRules(files);
+    const results = runRules(files, config);
     core.info(`Rules produced ${results.length} finding(s).`);
+
+    emitAnnotations(results);
 
     const body = formatComment(files, results);
 
@@ -46,6 +54,14 @@ async function run(): Promise<void> {
 
     core.info("Comment posted successfully.");
     core.setOutput("comment-posted", "true");
+
+    const failOnWarning = core.getBooleanInput("fail-on-warning");
+    const failOnError = core.getBooleanInput("fail-on-error");
+
+    const { failed, message } = shouldFail(results, { failOnWarning, failOnError });
+    if (failed && message) {
+      core.setFailed(message);
+    }
   } catch (error) {
     if (error instanceof Error) {
       core.setFailed(error.message);
@@ -54,4 +70,5 @@ async function run(): Promise<void> {
     }
   }
 }
+
 run();

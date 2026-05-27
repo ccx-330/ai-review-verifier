@@ -1,4 +1,5 @@
 import { ChangedFile } from "../diff";
+import { Config } from "../config";
 
 export interface RuleResult {
   ruleId: string;
@@ -11,5 +12,5 @@ export interface RuleResult {
 export interface Rule {
   id: string;
   description: string;
-  run(files: ChangedFile[]): RuleResult[];
+  run(files: ChangedFile[], config: Config): RuleResult[];
 }

@@ -1,7 +1,6 @@
 import { ChangedFile } from "../diff";
+import { Config } from "../config";
 import { Rule, RuleResult } from "./types";
-
-const ADDITIONS_THRESHOLD = 300;
 
 const IGNORED_PATTERNS = [
   /^dist\//,
@@ -20,16 +19,17 @@ function isIgnored(filename: string): boolean {
 export const largeFileRule: Rule = {
   id: "large-file",
   description: "Flag files with too many additions",
-  run(files: ChangedFile[]): RuleResult[] {
+  run(files: ChangedFile[], config: Config): RuleResult[] {
     const results: RuleResult[] = [];
+    const threshold = config.largeFileThreshold;
 
     for (const file of files) {
       if (isIgnored(file.filename)) continue;
-      if (file.additions > ADDITIONS_THRESHOLD) {
+      if (file.additions > threshold) {
         results.push({
           ruleId: "large-file",
           severity: "warning",
-          message: `File has ${file.additions} additions (threshold: ${ADDITIONS_THRESHOLD}). Consider splitting into smaller changes.`,
+          message: `File has ${file.additions} additions (threshold: ${threshold}). Consider splitting into smaller changes.`,
           filename: file.filename,
         });
       }

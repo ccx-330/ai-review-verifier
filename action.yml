@@ -1,17 +1,25 @@
 name: "AI Review Verifier"
 description: "Check code diffs in Pull Requests and automatically comment on potential issues."
-author: "ai-review-verifier"
+author: "ccx-330"
 
 inputs:
   github-token:
     description: "GitHub token for API access"
     required: true
     default: ${{ github.token }}
+  fail-on-warning:
+    description: "Fail the workflow when warning issues are found."
+    required: false
+    default: "false"
+  fail-on-error:
+    description: "Fail the workflow when error issues are found."
+    required: false
+    default: "false"
 
 runs:
   using: "node20"
   main: "dist/index.js"
 
 branding:
-  icon: "check-circle"
+  icon: "shield"
   color: "blue"

@@ -1,4 +1,5 @@
 import { ChangedFile } from "../diff";
+import { Config } from "../config";
 import { Rule, RuleResult } from "./types";
 
 const CODE_PATTERN = /^src\/.+\.(ts|tsx|js|jsx)$/;
@@ -12,7 +13,7 @@ const TEST_PATTERNS = [
 export const missingTestsRule: Rule = {
   id: "missing-tests",
   description: "Warn when source files are changed without corresponding test changes",
-  run(files: ChangedFile[]): RuleResult[] {
+  run(files: ChangedFile[], _config: Config): RuleResult[] {
     const changedCodeFiles = files.filter((f) => CODE_PATTERN.test(f.filename));
     if (changedCodeFiles.length === 0) return [];
 

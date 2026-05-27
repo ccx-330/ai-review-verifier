@@ -1,0 +1,20 @@
+# AI Review Verifier — example configuration
+# Copy this file to your repository root as .ai-review-verifier.yml
+
+rules:
+  console-log: true
+  todo-comment: true
+  large-file: true
+  missing-tests: true
+  debugger: true
+  secret-detection: true
+  package-change: true
+
+# Number of additions before large-file triggers (default: 300)
+largeFileThreshold: 500
+
+# Regex patterns — matching files are excluded from all rules
+ignore:
+  - "^dist/"
+  - "^coverage/"
+  - ".*\\.generated\\.ts$"

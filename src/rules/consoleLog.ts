@@ -1,4 +1,5 @@
 import { ChangedFile } from "../diff";
+import { Config } from "../config";
 import { Rule, RuleResult } from "./types";
 
 const IGNORE_PATTERN = /ai-review-verifier-ignore/;
@@ -6,7 +7,7 @@ const IGNORE_PATTERN = /ai-review-verifier-ignore/;
 export const consoleLogRule: Rule = {
   id: "console-log",
   description: "Detect console.log statements in added lines",
-  run(files: ChangedFile[]): RuleResult[] {
+  run(files: ChangedFile[], _config: Config): RuleResult[] {
     const results: RuleResult[] = [];
 
     for (const file of files) {
