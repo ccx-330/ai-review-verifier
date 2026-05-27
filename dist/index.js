@@ -229,7 +229,6 @@ async function run() {
         }
     }
 }
-console.log("test");
 run();
 //# sourceMappingURL=index.js.map
 
@@ -306,12 +305,26 @@ function runRules(files) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.largeFileRule = void 0;
 const ADDITIONS_THRESHOLD = 300;
+const IGNORED_PATTERNS = [
+    /^dist\//,
+    /^lib\//,
+    /^build\//,
+    /^coverage\//,
+    /^node_modules\//,
+    /\.min\.js$/,
+    /^package-lock\.json$/,
+];
+function isIgnored(filename) {
+    return IGNORED_PATTERNS.some((pattern) => pattern.test(filename));
+}
 exports.largeFileRule = {
     id: "large-file",
     description: "Flag files with too many additions",
     run(files) {
         const results = [];
         for (const file of files) {
+            if (isIgnored(file.filename))
+                continue;
             if (file.additions > ADDITIONS_THRESHOLD) {
                 results.push({
                     ruleId: "large-file",
