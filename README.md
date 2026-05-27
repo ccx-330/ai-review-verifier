@@ -42,7 +42,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Run AI Review Verifier
-        uses: ccx-330/ai-review-verifier@v0.6.0
+        uses: ccx-330/ai-review-verifier@v0.7.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -56,11 +56,12 @@ jobs:
 | **Basic** | Comment and annotate only, never fail | [examples/basic.yml](examples/basic.yml) |
 | **Strict** | Fail on any warning or error | [examples/strict.yml](examples/strict.yml) |
 | **Configured** | Custom rules and thresholds | [examples/configured.yml](examples/configured.yml) |
+| **Inline** | Post review comments on specific lines | see below |
 
 ### Basic
 
 ```yaml
-- uses: ccx-330/ai-review-verifier@v0.6.0
+- uses: ccx-330/ai-review-verifier@v0.7.0
   with:
     github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -68,7 +69,7 @@ jobs:
 ### Strict
 
 ```yaml
-- uses: ccx-330/ai-review-verifier@v0.6.0
+- uses: ccx-330/ai-review-verifier@v0.7.0
   with:
     github-token: ${{ secrets.GITHUB_TOKEN }}
     fail-on-warning: true
@@ -78,11 +79,22 @@ jobs:
 ### Error-only
 
 ```yaml
-- uses: ccx-330/ai-review-verifier@v0.6.0
+- uses: ccx-330/ai-review-verifier@v0.7.0
   with:
     github-token: ${{ secrets.GITHUB_TOKEN }}
     fail-on-error: true
 ```
+
+### Inline Comments
+
+```yaml
+- uses: ccx-330/ai-review-verifier@v0.7.0
+  with:
+    github-token: ${{ secrets.GITHUB_TOKEN }}
+    inline-comments: true
+```
+
+When enabled, issues with file and line information are posted as inline review comments in the **Files changed** tab. The summary comment and annotations are still created.
 
 > `fail-on-warning` triggers on both warning and error severity. `fail-on-error` only triggers on error severity. `info` never causes a failure.
 
@@ -158,6 +170,7 @@ Each annotation includes the file path and line number when available, so you ca
 | `github-token` | Yes | `${{ github.token }}` | GitHub token for API access |
 | `fail-on-warning` | No | `false` | Fail the workflow when warning or error issues are found |
 | `fail-on-error` | No | `false` | Fail the workflow when error issues are found |
+| `inline-comments` | No | `false` | Add inline review comments to changed lines |
 
 ## Outputs
 
@@ -192,7 +205,7 @@ This project follows [Semantic Versioning](https://semver.org/). Always use a fi
 
 ```yaml
 # Recommended — pinned to a specific release
-uses: ccx-330/ai-review-verifier@v0.6.0
+uses: ccx-330/ai-review-verifier@v0.7.0
 
 # Not recommended — may break at any time
 uses: ccx-330/ai-review-verifier@main
@@ -270,6 +283,7 @@ src/
 ├── formatter.ts      # Generates the Markdown comment body
 ├── annotations.ts    # Emits GitHub Checks annotations
 ├── failure.ts        # fail-on-warning / fail-on-error logic
+├── inlineComments.ts # inline PR review comments
 ├── rules/
 │   ├── types.ts      # Rule and RuleResult interfaces
 │   ├── consoleLog.ts # console.log detection

@@ -6,6 +6,7 @@ import { runRules } from "./rules";
 import { formatComment } from "./formatter";
 import { upsertPullRequestComment } from "./comment";
 import { emitAnnotations } from "./annotations";
+import { createInlineComments } from "./inlineComments";
 import { shouldFail } from "./failure";
 
 async function run(): Promise<void> {
@@ -54,6 +55,20 @@ async function run(): Promise<void> {
 
     core.info("Comment posted successfully.");
     core.setOutput("comment-posted", "true");
+
+    const inlineComments = core.getBooleanInput("inline-comments");
+    if (inlineComments) {
+      await createInlineComments({
+        octokit,
+        owner,
+        repo: repoName,
+        pull_number: pullNumber,
+        commit_id: sha,
+        results,
+        files,
+      });
+      core.info("Inline comments posted.");
+    }
 
     const failOnWarning = core.getBooleanInput("fail-on-warning");
     const failOnError = core.getBooleanInput("fail-on-error");

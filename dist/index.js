@@ -379,6 +379,7 @@ const rules_1 = __nccwpck_require__(9932);
 const formatter_1 = __nccwpck_require__(3706);
 const comment_1 = __nccwpck_require__(9661);
 const annotations_1 = __nccwpck_require__(8926);
+const inlineComments_1 = __nccwpck_require__(1061);
 const failure_1 = __nccwpck_require__(4926);
 async function run() {
     try {
@@ -413,6 +414,19 @@ async function run() {
         await (0, comment_1.upsertPullRequestComment)(octokit, owner, repoName, pullNumber, body);
         core.info("Comment posted successfully.");
         core.setOutput("comment-posted", "true");
+        const inlineComments = core.getBooleanInput("inline-comments");
+        if (inlineComments) {
+            await (0, inlineComments_1.createInlineComments)({
+                octokit,
+                owner,
+                repo: repoName,
+                pull_number: pullNumber,
+                commit_id: sha,
+                results,
+                files,
+            });
+            core.info("Inline comments posted.");
+        }
         const failOnWarning = core.getBooleanInput("fail-on-warning");
         const failOnError = core.getBooleanInput("fail-on-error");
         const { failed, message } = (0, failure_1.shouldFail)(results, { failOnWarning, failOnError });
@@ -431,6 +445,60 @@ async function run() {
 }
 run();
 //# sourceMappingURL=index.js.map
+
+/***/ }),
+
+/***/ 1061:
+/***/ ((__unused_webpack_module, exports) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.buildInlineComments = buildInlineComments;
+exports.createInlineComments = createInlineComments;
+const SEVERITY_ICON = {
+    error: "❌ error",
+    warning: "⚠️ warning",
+    info: "ℹ️ info",
+};
+function buildInlineComments(results, files) {
+    const fileMap = new Map(files.map((f) => [f.filename, f]));
+    const comments = [];
+    for (const r of results) {
+        if (!r.filename || !r.lineNumber)
+            continue;
+        const file = fileMap.get(r.filename);
+        if (!file || !file.patch)
+            continue;
+        const addedLineNumbers = new Set(file.addedLines.map((l) => l.lineNumber));
+        if (!addedLineNumbers.has(r.lineNumber))
+            continue;
+        const icon = SEVERITY_ICON[r.severity] ?? r.severity;
+        comments.push({
+            path: r.filename,
+            line: r.lineNumber,
+            body: `${icon}\n\n[${r.ruleId}] ${r.message}`,
+        });
+    }
+    return comments;
+}
+async function createInlineComments(input) {
+    const { octokit, owner, repo, pull_number, commit_id, results, files } = input;
+    const comments = buildInlineComments(results, files);
+    if (comments.length === 0) {
+        return;
+    }
+    await octokit.rest.pulls.createReview({
+        owner,
+        repo,
+        pull_number,
+        commit_id,
+        event: "COMMENT",
+        body: "AI Review Verifier inline comments",
+        comments,
+    });
+}
+//# sourceMappingURL=inlineComments.js.map
 
 /***/ }),
 
