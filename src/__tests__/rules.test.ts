@@ -124,6 +124,52 @@ describe("largeFileRule", () => {
 
     expect(results).toHaveLength(0);
   });
+
+  it("ignores dist/ files even when over threshold", () => {
+    const files = [
+      makeFile({ filename: "dist/index.js", additions: 1000 }),
+      makeFile({ filename: "dist/licenses.txt", additions: 500 }),
+    ];
+
+    const results = largeFileRule.run(files);
+
+    expect(results).toHaveLength(0);
+  });
+
+  it("ignores lib/, build/, coverage/, node_modules/", () => {
+    const files = [
+      makeFile({ filename: "lib/bundle.js", additions: 500 }),
+      makeFile({ filename: "build/output.js", additions: 500 }),
+      makeFile({ filename: "coverage/lcov-report/index.html", additions: 500 }),
+      makeFile({ filename: "node_modules/pkg/index.js", additions: 500 }),
+    ];
+
+    const results = largeFileRule.run(files);
+
+    expect(results).toHaveLength(0);
+  });
+
+  it("ignores *.min.js and package-lock.json", () => {
+    const files = [
+      makeFile({ filename: "vendor/app.min.js", additions: 500 }),
+      makeFile({ filename: "package-lock.json", additions: 500 }),
+    ];
+
+    const results = largeFileRule.run(files);
+
+    expect(results).toHaveLength(0);
+  });
+
+  it("still flags src/ files over threshold", () => {
+    const files = [
+      makeFile({ filename: "src/index.ts", additions: 301 }),
+    ];
+
+    const results = largeFileRule.run(files);
+
+    expect(results).toHaveLength(1);
+    expect(results[0].ruleId).toBe("large-file");
+  });
 });
 
 describe("missingTestsRule", () => {
