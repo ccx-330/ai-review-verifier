@@ -1,6 +1,51 @@
 require('./sourcemap-register.js');/******/ (() => { // webpackBootstrap
 /******/ 	var __webpack_modules__ = ({
 
+/***/ 8653:
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+
+"use strict";
+
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.isPathAllowed = isPathAllowed;
+exports.isSecretAllowed = isSecretAllowed;
+exports.isRuleAllowed = isRuleAllowed;
+exports.shouldSkipRuleResult = shouldSkipRuleResult;
+const config_1 = __nccwpck_require__(6472);
+function isPathAllowed(filename, config) {
+    return config.allowlist.paths.some((pattern) => {
+        const re = (0, config_1.compilePattern)(pattern);
+        return re ? re.test(filename) : false;
+    });
+}
+function isSecretAllowed(content, config) {
+    return config.allowlist.secrets.some((pattern) => {
+        const re = (0, config_1.compilePattern)(pattern);
+        return re ? re.test(content) : false;
+    });
+}
+function isRuleAllowed(ruleId, filename, config) {
+    const patterns = config.allowlist.rules[ruleId];
+    if (!patterns)
+        return false;
+    return patterns.some((pattern) => {
+        const re = (0, config_1.compilePattern)(pattern);
+        return re ? re.test(filename) : false;
+    });
+}
+function shouldSkipRuleResult(ruleId, filename, content, config) {
+    if (filename && isPathAllowed(filename, config))
+        return true;
+    if (filename && isRuleAllowed(ruleId, filename, config))
+        return true;
+    if (ruleId === "secret-detection" && content && isSecretAllowed(content, config))
+        return true;
+    return false;
+}
+//# sourceMappingURL=allowlist.js.map
+
+/***/ }),
+
 /***/ 8926:
 /***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
@@ -150,8 +195,10 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.loadConfig = loadConfig;
+exports.compilePattern = compilePattern;
 const fs = __importStar(__nccwpck_require__(9896));
 const yaml = __importStar(__nccwpck_require__(4281));
+const core = __importStar(__nccwpck_require__(7484));
 const DEFAULT_CONFIG = {
     rules: {
         "console-log": true,
@@ -164,26 +211,39 @@ const DEFAULT_CONFIG = {
     },
     largeFileThreshold: 300,
     ignore: [],
+    allowlist: {
+        paths: [],
+        secrets: [],
+        rules: {},
+    },
 };
 const CONFIG_FILE = ".ai-review-verifier.yml";
 function loadConfig(configPath) {
     const filePath = configPath ?? CONFIG_FILE;
     if (!fs.existsSync(filePath)) {
-        return { rules: { ...DEFAULT_CONFIG.rules }, largeFileThreshold: DEFAULT_CONFIG.largeFileThreshold, ignore: [...DEFAULT_CONFIG.ignore] };
+        return cloneConfig(DEFAULT_CONFIG);
     }
     const raw = fs.readFileSync(filePath, "utf8");
     const parsed = yaml.load(raw);
     if (parsed === null || parsed === undefined || typeof parsed !== "object") {
-        return { rules: { ...DEFAULT_CONFIG.rules }, largeFileThreshold: DEFAULT_CONFIG.largeFileThreshold, ignore: [...DEFAULT_CONFIG.ignore] };
+        return cloneConfig(DEFAULT_CONFIG);
     }
     return mergeConfig(parsed);
 }
-function mergeConfig(raw) {
-    const config = {
-        rules: { ...DEFAULT_CONFIG.rules },
-        largeFileThreshold: DEFAULT_CONFIG.largeFileThreshold,
-        ignore: [...DEFAULT_CONFIG.ignore],
+function cloneConfig(src) {
+    return {
+        rules: { ...src.rules },
+        largeFileThreshold: src.largeFileThreshold,
+        ignore: [...src.ignore],
+        allowlist: {
+            paths: [...src.allowlist.paths],
+            secrets: [...src.allowlist.secrets],
+            rules: { ...src.allowlist.rules },
+        },
     };
+}
+function mergeConfig(raw) {
+    const config = cloneConfig(DEFAULT_CONFIG);
     if (raw.rules && typeof raw.rules === "object") {
         const rules = raw.rules;
         for (const key of Object.keys(config.rules)) {
@@ -198,7 +258,33 @@ function mergeConfig(raw) {
     if (Array.isArray(raw.ignore)) {
         config.ignore = raw.ignore.filter((item) => typeof item === "string");
     }
+    if (raw.allowlist && typeof raw.allowlist === "object") {
+        const allowlist = raw.allowlist;
+        if (Array.isArray(allowlist.paths)) {
+            config.allowlist.paths = allowlist.paths.filter((item) => typeof item === "string");
+        }
+        if (Array.isArray(allowlist.secrets)) {
+            config.allowlist.secrets = allowlist.secrets.filter((item) => typeof item === "string");
+        }
+        if (allowlist.rules && typeof allowlist.rules === "object") {
+            const rules = allowlist.rules;
+            for (const [key, value] of Object.entries(rules)) {
+                if (Array.isArray(value)) {
+                    config.allowlist.rules[key] = value.filter((item) => typeof item === "string");
+                }
+            }
+        }
+    }
     return config;
+}
+function compilePattern(pattern) {
+    try {
+        return new RegExp(pattern);
+    }
+    catch {
+        core.warning(`Invalid regex pattern in config, skipping: ${pattern}`);
+        return null;
+    }
 }
 //# sourceMappingURL=config.js.map
 
@@ -579,6 +665,7 @@ exports.debuggerRule = {
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.runRules = runRules;
+const allowlist_1 = __nccwpck_require__(8653);
 const consoleLog_1 = __nccwpck_require__(5787);
 const todoComment_1 = __nccwpck_require__(3069);
 const largeFile_1 = __nccwpck_require__(337);
@@ -602,12 +689,14 @@ function filterFiles(files, ignore) {
     return files.filter((file) => !patterns.some((pattern) => pattern.test(file.filename)));
 }
 function runRules(files, config) {
-    const filtered = filterFiles(files, config.ignore);
+    const ignored = filterFiles(files, config.ignore);
+    const filtered = ignored.filter((file) => !(0, allowlist_1.isPathAllowed)(file.filename, config));
     const results = [];
     for (const { rule, configKey } of allRules) {
         if (!config.rules[configKey])
             continue;
-        results.push(...rule.run(filtered, config));
+        const ruleFiltered = filtered.filter((file) => !(0, allowlist_1.isRuleAllowed)(configKey, file.filename, config));
+        results.push(...rule.run(ruleFiltered, config));
     }
     return results;
 }
@@ -730,12 +819,13 @@ exports.packageChangeRule = {
 /***/ }),
 
 /***/ 19:
-/***/ ((__unused_webpack_module, exports) => {
+/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
 
 "use strict";
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.secretDetectionRule = void 0;
+const allowlist_1 = __nccwpck_require__(8653);
 const IGNORE_PATTERN = /ai-review-verifier-ignore/;
 const SECRET_PATTERNS = [
     /ghp_[A-Za-z0-9]{36,}/,
@@ -754,11 +844,13 @@ const SECRET_PATTERNS = [
 exports.secretDetectionRule = {
     id: "secret-detection",
     description: "Detect possible hardcoded secrets and tokens",
-    run(files, _config) {
+    run(files, config) {
         const results = [];
         for (const file of files) {
             for (const line of file.addedLines) {
                 if (IGNORE_PATTERN.test(line.content))
+                    continue;
+                if ((0, allowlist_1.isSecretAllowed)(line.content, config))
                     continue;
                 for (const pattern of SECRET_PATTERNS) {
                     if (pattern.test(line.content)) {

@@ -42,7 +42,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Run AI Review Verifier
-        uses: ccx-330/ai-review-verifier@v0.7.0
+        uses: ccx-330/ai-review-verifier@v0.9.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -61,7 +61,7 @@ jobs:
 ### Basic
 
 ```yaml
-- uses: ccx-330/ai-review-verifier@v0.7.0
+- uses: ccx-330/ai-review-verifier@v0.9.0
   with:
     github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -69,7 +69,7 @@ jobs:
 ### Strict
 
 ```yaml
-- uses: ccx-330/ai-review-verifier@v0.7.0
+- uses: ccx-330/ai-review-verifier@v0.9.0
   with:
     github-token: ${{ secrets.GITHUB_TOKEN }}
     fail-on-warning: true
@@ -79,7 +79,7 @@ jobs:
 ### Error-only
 
 ```yaml
-- uses: ccx-330/ai-review-verifier@v0.7.0
+- uses: ccx-330/ai-review-verifier@v0.9.0
   with:
     github-token: ${{ secrets.GITHUB_TOKEN }}
     fail-on-error: true
@@ -88,7 +88,7 @@ jobs:
 ### Inline Comments
 
 ```yaml
-- uses: ccx-330/ai-review-verifier@v0.7.0
+- uses: ccx-330/ai-review-verifier@v0.9.0
   with:
     github-token: ${{ secrets.GITHUB_TOKEN }}
     inline-comments: true
@@ -133,6 +133,16 @@ largeFileThreshold: 300
 ignore:
   - "^vendor/"
   - "\\.generated\\."
+
+allowlist:
+  paths:
+    - "^src/generated/"
+    - "^vendor/"
+  secrets:
+    - "ghp_example_test_token"
+  rules:
+    console-log:
+      - "^scripts/"
 ```
 
 ### Config Reference
@@ -148,6 +158,9 @@ ignore:
 | `rules.package-change` | boolean | `true` | Enable/disable package.json lockfile check |
 | `largeFileThreshold` | number | `300` | Additions threshold for large-file rule |
 | `ignore` | string[] | `[]` | Regex patterns to exclude files from all rules |
+| `allowlist.paths` | string[] | `[]` | Regex patterns — matching files are excluded from all rules |
+| `allowlist.secrets` | string[] | `[]` | Regex patterns — matching lines are excluded from secret-detection |
+| `allowlist.rules` | map | `{}` | Per-rule file exclusions (key = rule id, value = list of regex patterns) |
 
 ### Adding Custom Rules
 
@@ -205,7 +218,7 @@ This project follows [Semantic Versioning](https://semver.org/). Always use a fi
 
 ```yaml
 # Recommended — pinned to a specific release
-uses: ccx-330/ai-review-verifier@v0.7.0
+uses: ccx-330/ai-review-verifier@v0.9.0
 
 # Not recommended — may break at any time
 uses: ccx-330/ai-review-verifier@main

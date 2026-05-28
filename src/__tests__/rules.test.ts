@@ -32,6 +32,11 @@ const defaultConfig: Config = {
   },
   largeFileThreshold: 300,
   ignore: [],
+  allowlist: {
+    paths: [],
+    secrets: [],
+    rules: {},
+  },
 };
 
 describe("consoleLogRule", () => {
@@ -440,5 +445,99 @@ describe("runRules", () => {
     const results = runRules(files, config);
 
     expect(results).toHaveLength(0);
+  });
+});
+
+describe("allowlist", () => {
+  it("allowlist.paths excludes files from all rules", () => {
+    const files = [
+      makeFile({
+        filename: "src/generated.ts",
+        additions: 500,
+        addedLines: [{ lineNumber: 1, content: 'console.log("x")' }],
+      }),
+      makeFile({
+        filename: "src/app.ts",
+        additions: 10,
+        addedLines: [{ lineNumber: 1, content: 'console.log("x")' }],
+      }),
+    ];
+    const config: Config = {
+      ...defaultConfig,
+      allowlist: { ...defaultConfig.allowlist, paths: ["^src/generated"] },
+      rules: { ...defaultConfig.rules, "missing-tests": false },
+    };
+
+    const results = runRules(files, config);
+
+    expect(results.every((r) => r.filename !== "src/generated.ts")).toBe(true);
+    expect(results.filter((r) => r.filename === "src/app.ts")).toHaveLength(1);
+  });
+
+  it("allowlist.rules excludes files from a specific rule", () => {
+    const files = [
+      makeFile({
+        filename: "src/app.ts",
+        addedLines: [
+          { lineNumber: 1, content: 'console.log("x")' },
+          { lineNumber: 2, content: "// TODO: fix" },
+        ],
+      }),
+    ];
+    const config: Config = {
+      ...defaultConfig,
+      allowlist: {
+        ...defaultConfig.allowlist,
+        rules: { "console-log": ["^src/app\\.ts$"] },
+      },
+      rules: { ...defaultConfig.rules, "missing-tests": false },
+    };
+
+    const results = runRules(files, config);
+
+    const ruleIds = results.map((r) => r.ruleId);
+    expect(ruleIds).not.toContain("console-log");
+    expect(ruleIds).toContain("todo-comment");
+  });
+
+  it("allowlist.secrets skips matching content in secret-detection", () => {
+    const files = [
+      makeFile({
+        filename: "src/test-fixtures.ts",
+        addedLines: [
+          { lineNumber: 1, content: 'const token = "ghp_abcdefghijklmnopqrstuvwxyz1234567890abcd";' },
+        ],
+      }),
+    ];
+    const config: Config = {
+      ...defaultConfig,
+      allowlist: {
+        ...defaultConfig.allowlist,
+        secrets: ["ghp_abcdefghijklmnopqrstuvwxyz"],
+      },
+    };
+
+    const results = secretDetectionRule.run(files, config);
+
+    expect(results).toHaveLength(0);
+  });
+
+  it("allowlist does not affect non-matching files", () => {
+    const files = [
+      makeFile({
+        filename: "src/other.ts",
+        addedLines: [{ lineNumber: 1, content: 'console.log("x")' }],
+      }),
+    ];
+    const config: Config = {
+      ...defaultConfig,
+      allowlist: { ...defaultConfig.allowlist, paths: ["^vendor/"] },
+      rules: { ...defaultConfig.rules, "missing-tests": false },
+    };
+
+    const results = runRules(files, config);
+
+    expect(results).toHaveLength(1);
+    expect(results[0].ruleId).toBe("console-log");
   });
 });

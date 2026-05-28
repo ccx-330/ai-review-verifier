@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.9.0] - 2026-05-28
+
+### Added
+
+- Allowlist support in `.ai-review-verifier.yml`
+- `allowlist.paths` — exclude files matching regex patterns from all rules
+- `allowlist.secrets` — exclude lines matching regex patterns from secret-detection
+- `allowlist.rules` — per-rule file exclusions (key = rule id, value = list of regex patterns)
+- `src/allowlist.ts` module with `isPathAllowed`, `isSecretAllowed`, `isRuleAllowed`, `shouldSkipRuleResult`
+- `compilePattern` helper in config for safe regex compilation with warnings on invalid patterns
+
+### Changed
+
+- `runRules` now filters files through `allowlist.paths` and `allowlist.rules` before running each rule
+- `secretDetectionRule` now skips lines matching `allowlist.secrets` patterns
+- Example config updated with allowlist section
+
 ## [0.8.0] - 2026-05-27
 
 ### Added

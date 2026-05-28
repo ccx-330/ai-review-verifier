@@ -18,3 +18,22 @@ ignore:
   - "^dist/"
   - "^coverage/"
   - ".*\\.generated\\.ts$"
+
+# Allowlist — reduce false positives by excluding specific paths, secrets, or rules
+allowlist:
+  # Files matching these patterns are excluded from all rules
+  paths:
+    - "^src/generated/"
+    - "^vendor/"
+
+  # Lines matching these patterns are excluded from secret-detection
+  secrets:
+    - "ghp_example_test_token"
+    - "sk-example-test-key"
+
+  # Per-rule file exclusions
+  rules:
+    console-log:
+      - "^scripts/"
+    todo-comment:
+      - "^docs/"

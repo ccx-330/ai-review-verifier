@@ -1,5 +1,6 @@
 import { ChangedFile } from "../diff";
 import { Config } from "../config";
+import { isSecretAllowed } from "../allowlist";
 import { Rule, RuleResult } from "./types";
 
 const IGNORE_PATTERN = /ai-review-verifier-ignore/;
@@ -22,12 +23,13 @@ const SECRET_PATTERNS = [
 export const secretDetectionRule: Rule = {
   id: "secret-detection",
   description: "Detect possible hardcoded secrets and tokens",
-  run(files: ChangedFile[], _config: Config): RuleResult[] {
+  run(files: ChangedFile[], config: Config): RuleResult[] {
     const results: RuleResult[] = [];
 
     for (const file of files) {
       for (const line of file.addedLines) {
         if (IGNORE_PATTERN.test(line.content)) continue;
+        if (isSecretAllowed(line.content, config)) continue;
         for (const pattern of SECRET_PATTERNS) {
           if (pattern.test(line.content)) {
             results.push({
