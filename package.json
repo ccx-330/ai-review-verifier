@@ -1,6 +1,6 @@
 {
   "name": "ai-review-verifier",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "A GitHub Action that checks code diffs in Pull Requests and automatically comments on potential issues.",
   "main": "dist/index.js",
   "repository": {
@@ -11,7 +11,8 @@
     "build": "tsc",
     "test": "jest --passWithNoTests",
     "lint": "eslint src/**/*.ts",
-    "package": "ncc build lib/index.js --source-map --license licenses.txt"
+    "package": "ncc build lib/index.js --source-map --license licenses.txt",
+    "check-dist": "npm run build && npm run package && git diff --exit-code dist"
   },
   "keywords": [
     "github-action",

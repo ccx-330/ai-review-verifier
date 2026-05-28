@@ -301,6 +301,22 @@ src/
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
 
+## Release Process
+
+See [RELEASE.md](RELEASE.md) for the step-by-step release guide.
+
+## CI
+
+Every pull request runs:
+
+1. `npm run lint` — ESLint
+2. `npm run build` — TypeScript compilation
+3. `npm test` — unit tests
+4. `npm run package` — ncc bundle
+5. `npm run check-dist` — ensures `dist/index.js` is committed and up to date
+
+If `check-dist` fails, run `npm run package` and commit the updated `dist/` directory.
+
 ## License
 
 [MIT](LICENSE)

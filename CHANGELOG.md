@@ -4,6 +4,24 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.8.0] - 2026-05-27
+
+### Added
+
+- `check-dist` script to verify `dist/index.js` is in sync with source
+- CI now runs `check-dist` on every PR
+- `.github/release.yml` for automated release notes
+- `.github/PULL_REQUEST_TEMPLATE.md` with submission checklist
+- RELEASE.md with step-by-step release guide
+- CI section in README
+
+## [0.7.0] - 2026-05-27
+
+### Added
+
+- Inline review comments — post comments on specific diff lines
+- `inline-comments` input (default: `false`)
+
 ## [0.6.0] - 2026-05-27
 
 ### Added

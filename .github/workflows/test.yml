@@ -35,11 +35,7 @@ jobs:
         run: npm run package
 
       - name: Check dist/ is up to date
-        run: |
-          if [ -n "$(git diff --name-only dist/)" ]; then
-            echo "::error::dist/ is out of date. Run 'npm run package' and commit the result."
-            exit 1
-          fi
+        run: npm run check-dist
 
   test-action:
     runs-on: ubuntu-latest
