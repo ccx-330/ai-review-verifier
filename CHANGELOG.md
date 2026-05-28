@@ -4,6 +4,26 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.0.0] - 2026-05-28
+
+First stable release. No new features — this version marks the API and configuration format as stable.
+
+### Capabilities
+
+- PR summary comment with upsert logic (no comment spam)
+- GitHub Checks annotations (error / warning / notice)
+- Optional inline review comments on specific diff lines
+- 7 built-in rules: console-log, todo-comment, large-file, missing-tests, debugger, secret-detection, package-change
+- Configuration file support via `.ai-review-verifier.yml`
+- Allowlist support — exclude paths, secrets, or per-rule files to reduce false positives
+- `fail-on-warning` / `fail-on-error` workflow control
+- `check-dist` CI gate to ensure `dist/index.js` is in sync
+
+### Changed
+
+- All version references updated to v1.0.0
+- README updated with complete allowlist documentation and project structure
+
 ## [0.9.0] - 2026-05-28
 
 ### Added

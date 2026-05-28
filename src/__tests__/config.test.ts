@@ -2,6 +2,9 @@ import * as fs from "fs";
 import { loadConfig } from "../config";
 
 jest.mock("fs");
+jest.mock("@actions/core", () => ({
+  warning: jest.fn(),
+}));
 
 const mockedFs = jest.mocked(fs);
 
@@ -25,6 +28,7 @@ describe("loadConfig", () => {
     expect(config.rules["missing-tests"]).toBe(true);
     expect(config.largeFileThreshold).toBe(300);
     expect(config.ignore).toEqual([]);
+    expect(config.allowlist).toEqual({ paths: [], secrets: [], rules: {} });
   });
 
   it("parses rules toggle from YAML", () => {
@@ -62,6 +66,26 @@ ignore:
     const config = loadConfig();
 
     expect(config.ignore).toEqual(["^vendor/", ".generated."]);
+  });
+
+  it("parses allowlist from YAML", () => {
+    mockedFs.existsSync.mockReturnValue(true);
+    mockedFs.readFileSync.mockReturnValue(`
+allowlist:
+  paths:
+    - "^src/generated/"
+  secrets:
+    - "ghp_test"
+  rules:
+    console-log:
+      - "^scripts/"
+`);
+
+    const config = loadConfig();
+
+    expect(config.allowlist.paths).toEqual(["^src/generated/"]);
+    expect(config.allowlist.secrets).toEqual(["ghp_test"]);
+    expect(config.allowlist.rules["console-log"]).toEqual(["^scripts/"]);
   });
 
   it("returns defaults for empty YAML file", () => {

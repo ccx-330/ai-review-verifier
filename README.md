@@ -17,6 +17,7 @@ A GitHub Action that automatically reviews Pull Request diffs and comments on po
 - Warns when `package.json` is changed without a lockfile update
 - Annotations in the PR Checks tab (errors, warnings, notices)
 - Configurable via `.ai-review-verifier.yml`
+- Allowlist support — exclude paths, secrets, or per-rule files to reduce false positives
 - Optionally fail the workflow on warnings or errors
 - Easily extensible — add your own rules
 
@@ -42,12 +43,12 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Run AI Review Verifier
-        uses: ccx-330/ai-review-verifier@v0.9.0
+        uses: ccx-330/ai-review-verifier@v1.0.0
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-> **Tip:** Use a fixed version tag like `@v0.6.0` instead of `@main` to avoid breaking changes. See [Releases](https://github.com/ccx-330/ai-review-verifier/releases) for available versions.
+> **Tip:** Use a fixed version tag like `@v1.0.0` instead of `@main` to avoid breaking changes. See [Releases](https://github.com/ccx-330/ai-review-verifier/releases) for available versions.
 
 ## Usage Modes
 
@@ -61,7 +62,7 @@ jobs:
 ### Basic
 
 ```yaml
-- uses: ccx-330/ai-review-verifier@v0.9.0
+- uses: ccx-330/ai-review-verifier@v1.0.0
   with:
     github-token: ${{ secrets.GITHUB_TOKEN }}
 ```
@@ -69,7 +70,7 @@ jobs:
 ### Strict
 
 ```yaml
-- uses: ccx-330/ai-review-verifier@v0.9.0
+- uses: ccx-330/ai-review-verifier@v1.0.0
   with:
     github-token: ${{ secrets.GITHUB_TOKEN }}
     fail-on-warning: true
@@ -79,7 +80,7 @@ jobs:
 ### Error-only
 
 ```yaml
-- uses: ccx-330/ai-review-verifier@v0.9.0
+- uses: ccx-330/ai-review-verifier@v1.0.0
   with:
     github-token: ${{ secrets.GITHUB_TOKEN }}
     fail-on-error: true
@@ -88,7 +89,7 @@ jobs:
 ### Inline Comments
 
 ```yaml
-- uses: ccx-330/ai-review-verifier@v0.9.0
+- uses: ccx-330/ai-review-verifier@v1.0.0
   with:
     github-token: ${{ secrets.GITHUB_TOKEN }}
     inline-comments: true
@@ -218,7 +219,7 @@ This project follows [Semantic Versioning](https://semver.org/). Always use a fi
 
 ```yaml
 # Recommended — pinned to a specific release
-uses: ccx-330/ai-review-verifier@v0.9.0
+uses: ccx-330/ai-review-verifier@v1.0.0
 
 # Not recommended — may break at any time
 uses: ccx-330/ai-review-verifier@main
@@ -297,6 +298,7 @@ src/
 ├── annotations.ts    # Emits GitHub Checks annotations
 ├── failure.ts        # fail-on-warning / fail-on-error logic
 ├── inlineComments.ts # inline PR review comments
+├── allowlist.ts      # path/secret/rule allowlist filtering
 ├── rules/
 │   ├── types.ts      # Rule and RuleResult interfaces
 │   ├── consoleLog.ts # console.log detection

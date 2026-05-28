@@ -1,6 +1,6 @@
 {
   "name": "ai-review-verifier",
-  "version": "0.9.0",
+  "version": "1.0.0",
   "description": "A GitHub Action that checks code diffs in Pull Requests and automatically comments on potential issues.",
   "main": "dist/index.js",
   "repository": {
